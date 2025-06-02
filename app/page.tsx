@@ -1,103 +1,118 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect } from 'react';
+import { DocumentProvider, useDocumentContext } from './_contexts/DocumentContext';
+import { ApiKeyProvider } from './_contexts/ApiKeyContext';
+import ResponsiveLayout from './_components/layout/ResponsiveLayout';
+import DocumentViewer from './_components/document/DocumentViewer';
+import DocumentControls from './_components/document/DocumentControls';
+import ChatPanel from './_components/chat/ChatPanel';
+
+function ContractComparisonApp() {
+  const { documentA, loadDocument, isLoading, error, searchTerm, categoryFilter } = useDocumentContext();
+
+  useEffect(() => {
+    // Load the current contract on app start
+    loadDocument('contractA');
+  }, [loadDocument]);
+
+  const handleTextSelection = (selectedText: string, documentId: string, sectionId?: string) => {
+    console.log('Text selected:', { selectedText, documentId, sectionId });
+    // This will be implemented in Phase 4 when we add comparison tools
+  };
+
+  // Enhanced document A content with controls
+  const documentAContent = (
+    <div className="h-full flex flex-col">
+      <DocumentControls className="flex-none" />
+      <div className="flex-1 overflow-hidden">
+        <DocumentViewer
+          document={documentA}
+          searchTerm={searchTerm}
+          categoryFilter={categoryFilter}
+          onSelectText={handleTextSelection}
+          className="h-full"
+        />
+      </div>
+    </div>
+  );
+
+  // Integrated chat panel
+  const chatPanelContent = (
+    <ChatPanel className="h-full" />
+  );
+
+  // Placeholder for proposed contract (Document B)
+  const documentBContent = (
+    <div className="p-4 h-full flex items-center justify-center text-gray-500">
+      <div className="text-center">
+        <div className="text-4xl mb-2">📄</div>
+        <p>Proposed Contract</p>
+        <p className="text-sm">Coming in Phase 4</p>
+      </div>
+    </div>
+  );
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg border border-red-200">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Contract</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => loadDocument('contractA')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading contract data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      {/* App Header */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Contract Comparison Tool</h1>
+            <p className="text-sm text-gray-600">Compare current and proposed flight attendant contracts</p>
+          </div>
+          <div className="text-sm text-gray-500">
+            Phase 3: Enhanced Chatbot Integration 🤖
+          </div>
+        </div>
+      </header>
+
+      {/* Main Application */}
+      <ResponsiveLayout
+        documentAContent={documentAContent}
+        documentBContent={documentBContent}
+        chatPanelContent={chatPanelContent}
+      />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <ApiKeyProvider>
+      <DocumentProvider>
+        <ContractComparisonApp />
+      </DocumentProvider>
+    </ApiKeyProvider>
   );
 }
