@@ -39,3 +39,35 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PDF preprocessing artifacts (large files)
+/public/documents/*.json
+/scripts/input_pdfs/*.pdf
+
+# Python virtual environments
+venv/
+pdf_env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Large contract files (too big for GitHub)
+*.pdf
+current-contract.pdf
+proposed-contract.pdf
+
+# Development artifacts
+.pytest_cache/
+.coverage
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
