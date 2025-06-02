@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { CHAT_SEARCH_TERMS } from '../_config/aviationTerms';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -133,12 +134,8 @@ export class ChatService {
     const queryLower = query.toLowerCase();
     const relevantSections: string[] = [];
 
-    // Search for relevant sections based on query keywords
-    const searchTerms = [
-      'schedule', 'scheduling', 'pay', 'salary', 'wage', 'benefit', 'vacation', 
-      'sick', 'overtime', 'premium', 'base', 'assignment', 'bidding', 'seniority',
-      'crew', 'flight', 'duty', 'rest', 'time', 'hours'
-    ];
+    // Use the comprehensive search terms from aviation configuration
+    const searchTerms = CHAT_SEARCH_TERMS;
 
     // Find sections that contain relevant terms
     contractData.sections.forEach((section: { content?: string; pageStart?: number }) => {

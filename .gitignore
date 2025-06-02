@@ -58,6 +58,18 @@ __pycache__/
 current-contract.pdf
 proposed-contract.pdf
 
+# react-pdf font and map files (large binary files)
+/public/*.pfb
+/public/*.ttf
+/public/*.bcmap
+/public/*.otf
+/public/*.woff
+/public/*.woff2
+
+# Keep only essential react-pdf files
+!/public/pdf.worker.min.mjs
+!/public/LICENSE*
+
 # Development artifacts
 .pytest_cache/
 .coverage

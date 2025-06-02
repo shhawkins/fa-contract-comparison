@@ -8,6 +8,7 @@ interface DocumentViewerProps {
   searchTerm?: string;
   categoryFilter?: string[];
   onSelectText?: (selectedText: string, documentId: string, sectionId?: string) => void;
+  onNavigateToPdf?: (pageNumber: number) => void;
   className?: string;
 }
 
@@ -15,9 +16,10 @@ interface SectionRendererProps {
   section: DocumentSection;
   searchTerm?: string;
   onSelectText?: (selectedText: string, sectionId: string) => void;
+  onNavigateToPdf?: (pageNumber: number) => void;
 }
 
-function SectionRenderer({ section, searchTerm, onSelectText }: SectionRendererProps) {
+function SectionRenderer({ section, searchTerm, onSelectText, onNavigateToPdf }: SectionRendererProps) {
   const highlightedContent = useMemo(() => {
     if (!searchTerm || !section.content) {
       return section.content;
@@ -91,6 +93,17 @@ function SectionRenderer({ section, searchTerm, onSelectText }: SectionRendererP
         <span className={`text-xs px-2 py-1 rounded-full border ${getImportanceBadge(section.metadata.importance)}`}>
           {section.metadata.importance}
         </span>
+        
+        {/* View in PDF button */}
+        {section.originalPage && onNavigateToPdf && (
+          <button
+            onClick={() => onNavigateToPdf(section.originalPage!)}
+            className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+            title={`View page ${section.originalPage} in PDF`}
+          >
+            📖 View in PDF
+          </button>
+        )}
       </div>
 
       {/* Section content */}
@@ -109,6 +122,7 @@ export default function DocumentViewer({
   searchTerm, 
   categoryFilter = [], 
   onSelectText,
+  onNavigateToPdf,
   className = ''
 }: DocumentViewerProps) {
   const [jumpToPage, setJumpToPage] = useState<string>('');
@@ -264,6 +278,7 @@ export default function DocumentViewer({
               section={section}
               searchTerm={searchTerm}
               onSelectText={handleSectionTextSelection}
+              onNavigateToPdf={onNavigateToPdf}
             />
           </div>
         ))}

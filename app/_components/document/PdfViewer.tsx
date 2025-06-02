@@ -4,8 +4,18 @@ import React, { useState, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import Button from '../ui/Button';
 
-// Configure pdf.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+// Configure pdf.js worker to use local file for reliability
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+// Suppress non-critical errors from react-pdf
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  // Suppress clipboard-related errors as they don't affect PDF viewing functionality
+  if (typeof args[0] === 'string' && args[0].includes('Copy to clipboard is not supported')) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
 
 interface PdfViewerProps {
   file: string | null;
@@ -23,8 +33,10 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const [scale, setScale] = useState<number>(1.0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const lastTargetPageRef = React.useRef<number>(targetPage);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    console.log('PDF Document loaded successfully with', numPages, 'pages');
     setNumPages(numPages);
     setIsLoading(false);
     setError(null);
@@ -32,7 +44,13 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 
   const onDocumentLoadError = useCallback((error: Error) => {
     console.error('PDF load error:', error);
-    setError('Failed to load PDF document');
+    
+    // Check if it's a worker-related error
+    if (error.message.includes('worker') || error.message.includes('Worker')) {
+      setError('PDF worker failed to load. Please refresh the page or try again later.');
+    } else {
+      setError('Failed to load PDF document. Please check if the file exists and try again.');
+    }
     setIsLoading(false);
   }, []);
 
@@ -59,12 +77,15 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
   const resetZoom = () => setScale(1.0);
 
-  // Update page when targetPage prop changes
+  // Update page when targetPage prop changes (but not when pageNumber changes internally)
   React.useEffect(() => {
-    if (targetPage && targetPage !== pageNumber) {
+    // Only respond to targetPage changes, not internal pageNumber changes
+    if (targetPage !== lastTargetPageRef.current) {
+      console.log('targetPage changed from', lastTargetPageRef.current, 'to', targetPage);
+      lastTargetPageRef.current = targetPage;
       goToPage(targetPage);
     }
-  }, [targetPage, pageNumber, goToPage]);
+  }, [targetPage, goToPage]);
 
   if (!file) {
     return (
@@ -174,6 +195,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
               }
             >
               <Page
+                key={`page-${pageNumber}`}
                 pageNumber={pageNumber}
                 scale={scale}
                 onLoadStart={onPageLoadStart}
