@@ -55,9 +55,9 @@ export default function DocumentControls({ className = '' }: DocumentControlsPro
   const hasActiveFilters = localSearchTerm.length > 0 || categoryFilter.length > 0;
 
   return (
-    <div className={`bg-white border-b border-gray-200 p-4 space-y-4 ${className}`}>
+    <div className={`bg-white p-4 space-y-4 ${className}`}>
       {/* Search Input */}
-      <div className="relative">
+      <div className="relative max-w-2xl mx-auto">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -65,11 +65,11 @@ export default function DocumentControls({ className = '' }: DocumentControlsPro
         </div>
         <input
           type="text"
-          placeholder="Search contract content..."
+          placeholder="Search both contracts..."
           value={localSearchTerm}
           onChange={(e) => setLocalSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          aria-label="Search contract content"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+          aria-label="Search both contracts"
         />
         {localSearchTerm && (
           <button
@@ -85,8 +85,8 @@ export default function DocumentControls({ className = '' }: DocumentControlsPro
       </div>
 
       {/* Category Filters */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium text-gray-700">Filter by Category</h3>
           {hasActiveFilters && (
             <Button
@@ -100,7 +100,7 @@ export default function DocumentControls({ className = '' }: DocumentControlsPro
           )}
         </div>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {CATEGORY_OPTIONS.map((category) => {
             const isSelected = categoryFilter.includes(category.value);
             return (
@@ -129,23 +129,23 @@ export default function DocumentControls({ className = '' }: DocumentControlsPro
 
         {/* Active filters summary */}
         {categoryFilter.length > 0 && (
-          <div className="mt-2 text-xs text-gray-500">
-            Showing {categoryFilter.length} categor{categoryFilter.length === 1 ? 'y' : 'ies'}
+          <div className="mt-2 text-xs text-gray-500 text-center">
+            Showing {categoryFilter.length} categor{categoryFilter.length === 1 ? 'y' : 'ies'} across both contracts
           </div>
         )}
       </div>
 
       {/* Search Results Summary */}
       {searchTerm && (
-        <div className="text-xs text-gray-500 border-t pt-2 space-y-1">
+        <div className="text-xs text-gray-500 border-t pt-3 space-y-1 max-w-2xl mx-auto">
           {localSearchTerm !== searchTerm && (
-            <div className="text-blue-500">🔍 Searching...</div>
+            <div className="text-blue-500 text-center">🔍 Searching both contracts...</div>
           )}
-          <div>
+          <div className="text-center">
             Search: <span className="font-medium">&ldquo;{searchTerm}&rdquo;</span>
           </div>
-          <div className="text-orange-600">
-            💡 Tip: Page numbers are shown with each result for easy PDF reference
+          <div className="text-orange-600 text-center">
+            💡 Tip: Results appear in both contracts when available, with page numbers for PDF reference
           </div>
         </div>
       )}

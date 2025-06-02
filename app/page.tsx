@@ -34,20 +34,17 @@ function ContractComparisonApp() {
     setIsPdfModalOpen(false);
   };
 
-  // Enhanced document A content with controls
+  // Document A content without controls (controls moved to header)
   const documentAContent = (
-    <div className="h-full flex flex-col">
-      <DocumentControls className="flex-none" />
-      <div className="flex-1 overflow-hidden">
-        <DocumentViewer
-          document={documentA}
-          searchTerm={searchTerm}
-          categoryFilter={categoryFilter}
-          onSelectText={handleTextSelection}
-          onNavigateToPdf={handleNavigateToPdf}
-          className="h-full"
-        />
-      </div>
+    <div className="h-full overflow-hidden">
+      <DocumentViewer
+        document={documentA}
+        searchTerm={searchTerm}
+        categoryFilter={categoryFilter}
+        onSelectText={handleTextSelection}
+        onNavigateToPdf={handleNavigateToPdf}
+        className="h-full"
+      />
     </div>
   );
 
@@ -56,19 +53,16 @@ function ContractComparisonApp() {
     <ChatPanel className="h-full" />
   );
 
-  // Placeholder for proposed contract (Phase 4)
+  // Placeholder for proposed contract (Phase 4) - also uses same search
   const documentBContent = (
     <div className="h-full flex flex-col">
-      <div className="flex-none bg-white border-b border-gray-200 px-4 py-2">
-        <h3 className="text-sm font-medium text-gray-900">Proposed Contract</h3>
-        <p className="text-xs text-gray-600">New contract proposal will appear here in Phase 4</p>
-      </div>
       <div className="flex-1 overflow-hidden flex items-center justify-center bg-gray-50">
         <div className="text-center text-gray-500">
           <div className="text-6xl mb-4">📋</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Proposed Contract</h3>
           <p className="text-gray-600 mb-4">Upload or load a proposed contract to compare</p>
           <p className="text-sm text-gray-500">Coming in Phase 4: Comparison Tools & Templates</p>
+          <p className="text-xs text-gray-400 mt-2">When loaded, this document will also be searchable using the search bar above</p>
         </div>
       </div>
     </div>
@@ -117,6 +111,11 @@ function ContractComparisonApp() {
           </div>
         </div>
       </header>
+
+      {/* Global Search Controls - Spans both contracts */}
+      <div className="bg-white border-b border-gray-200">
+        <DocumentControls className="max-w-none" />
+      </div>
 
       {/* Main Application */}
       <ResponsiveLayout
