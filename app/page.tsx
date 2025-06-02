@@ -6,13 +6,20 @@ import { ApiKeyProvider } from './_contexts/ApiKeyContext';
 import ResponsiveLayout from './_components/layout/ResponsiveLayout';
 import DocumentViewer from './_components/document/DocumentViewer';
 import DocumentControls from './_components/document/DocumentControls';
-import ChatPanel from './_components/chat/ChatPanel';
 import PdfModal from './_components/document/PdfModal';
+import ComparisonTool from './_components/comparison/ComparisonTool';
 
 function ContractComparisonApp() {
   const { documentA, loadDocument, isLoading, error, searchTerm, categoryFilter } = useDocumentContext();
   const [pdfTargetPage, setPdfTargetPage] = useState<number>(1);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState<boolean>(false);
+  const [lastSelection, setLastSelection] = useState<{
+    text: string;
+    documentId: 'documentA' | 'documentB';
+    sectionId: string;
+    pageNumber?: number;
+    category?: string;
+  } | null>(null);
 
   useEffect(() => {
     // Load the current contract on app start
@@ -21,7 +28,17 @@ function ContractComparisonApp() {
 
   const handleTextSelection = (selectedText: string, documentId: string, sectionId?: string) => {
     console.log('Text selected:', { selectedText, documentId, sectionId });
-    // This will be implemented in Phase 4 when we add comparison tools
+    
+    // Find section metadata for the selection
+    const section = documentA?.sections?.find(s => s.id === sectionId);
+    
+    setLastSelection({
+      text: selectedText,
+      documentId: documentId as 'documentA' | 'documentB',
+      sectionId: sectionId || '',
+      pageNumber: section?.originalPage,
+      category: section?.metadata.category
+    });
   };
 
   const handleNavigateToPdf = (pageNumber: number) => {
@@ -48,9 +65,11 @@ function ContractComparisonApp() {
     </div>
   );
 
-  // Integrated chat panel
-  const chatPanelContent = (
-    <ChatPanel className="h-full" />
+  // Comparison tool replacing chat panel temporarily for Phase 4
+  const comparisonContent = (
+    <div className="h-full overflow-auto">
+      <ComparisonTool className="h-full" />
+    </div>
   );
 
   // Placeholder for proposed contract (Phase 4) - also uses same search
@@ -63,6 +82,24 @@ function ContractComparisonApp() {
           <p className="text-gray-600 mb-4">Upload or load a proposed contract to compare</p>
           <p className="text-sm text-gray-500">Coming in Phase 4: Comparison Tools & Templates</p>
           <p className="text-xs text-gray-400 mt-2">When loaded, this document will also be searchable using the search bar above</p>
+          {lastSelection && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 max-w-md mx-auto">
+              <p className="text-xs text-gray-600 mb-1">Last selected text from current contract:</p>
+              <p className="text-sm text-gray-800 line-clamp-3">{lastSelection.text}</p>
+              <div className="flex items-center gap-2 mt-2">
+                {lastSelection.pageNumber && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                    Page {lastSelection.pageNumber}
+                  </span>
+                )}
+                {lastSelection.category && (
+                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                    {lastSelection.category}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -107,7 +144,7 @@ function ContractComparisonApp() {
             <p className="text-sm text-gray-600">Compare current and proposed flight attendant contracts</p>
           </div>
           <div className="text-sm text-gray-500">
-            Phase 3.5: PDF Integration Complete ✅
+            Phase 4: Comparison Tools & Templates 🚀
           </div>
         </div>
       </header>
@@ -121,7 +158,7 @@ function ContractComparisonApp() {
       <ResponsiveLayout
         documentAContent={documentAContent}
         documentBContent={documentBContent}
-        chatPanelContent={chatPanelContent}
+        chatPanelContent={comparisonContent}
       />
 
       {/* PDF Modal */}
