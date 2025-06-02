@@ -74,6 +74,9 @@ function SectionRenderer({ section, searchTerm, onSelectText, onNavigateToPdf }:
     list: 'text-gray-700 mb-4'
   };
 
+  // Special handling for condensed TOC section
+  const isCondensedToc = section.id === 'toc_condensed';
+
   return (
     <div 
       className="border-l-2 border-gray-100 pl-4 mb-4 hover:border-blue-200 transition-colors group"
@@ -84,7 +87,9 @@ function SectionRenderer({ section, searchTerm, onSelectText, onNavigateToPdf }:
         {/* Page number - prominently displayed */}
         {section.originalPage && (
           <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
-            📄 Page {section.originalPage}
+            📄 {isCondensedToc && section.metadata.pageRange ? 
+              `Pages ${section.metadata.pageRange.start}-${section.metadata.pageRange.end}` : 
+              `Page ${section.originalPage}`}
           </span>
         )}
         <span className={`text-xs px-2 py-1 rounded-full border ${getCategoryBadgeColor(section.metadata.category)}`}>
@@ -94,12 +99,21 @@ function SectionRenderer({ section, searchTerm, onSelectText, onNavigateToPdf }:
           {section.metadata.importance}
         </span>
         
+        {/* Special badge for condensed TOC */}
+        {isCondensedToc && section.metadata.sectionCount && (
+          <span className="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            {section.metadata.sectionCount} sections
+          </span>
+        )}
+        
         {/* View in PDF button */}
         {section.originalPage && onNavigateToPdf && (
           <button
             onClick={() => onNavigateToPdf(section.originalPage!)}
             className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
-            title={`View page ${section.originalPage} in PDF`}
+            title={isCondensedToc ? 
+              `View table of contents in PDF (pages ${section.metadata.pageRange?.start}-${section.metadata.pageRange?.end})` :
+              `View page ${section.originalPage} in PDF`}
           >
             📖 View in PDF
           </button>
@@ -108,10 +122,19 @@ function SectionRenderer({ section, searchTerm, onSelectText, onNavigateToPdf }:
 
       {/* Section content */}
       <div 
-        className={`${sectionClasses[section.type]} select-text cursor-text`}
+        className={`${sectionClasses[section.type]} select-text cursor-text ${isCondensedToc ? 'italic text-gray-600' : ''}`}
         style={{ userSelect: 'text' }}
       >
-        {highlightedContent}
+        {isCondensedToc ? (
+          <div>
+            <span className="font-medium">{section.content}</span>
+            <span className="text-sm text-gray-500 ml-2">
+              (Click "View in PDF" to see full table of contents)
+            </span>
+          </div>
+        ) : (
+          highlightedContent
+        )}
       </div>
     </div>
   );
@@ -126,6 +149,86 @@ export default function DocumentViewer({
   className = ''
 }: DocumentViewerProps) {
   const [jumpToPage, setJumpToPage] = useState<string>('');
+
+  // Function to detect and collapse table of contents sections
+  const processTableOfContents = (sections: any[], searchTerm?: string) => {
+    // If user is searching, show all matching sections normally
+    if (searchTerm) {
+      return sections;
+    }
+
+    // Detect TOC sections - looking for sections that:
+    // 1. Contain "TABLE OF CONTENTS" or "Table of Contents"
+    // 2. Are on early pages (typically pages 2-4)
+    // 3. Have section listings like "Section X" with dots
+    const tocSections: any[] = [];
+    const contentSections: any[] = [];
+    
+    let inTocSection = false;
+    
+    sections.forEach((section) => {
+      const content = section.content.toLowerCase();
+      const isOnEarlyPage = section.originalPage <= 4;
+      
+      // Start of TOC
+      if (content.includes('table of contents') && isOnEarlyPage) {
+        inTocSection = true;
+        tocSections.push(section);
+      }
+      // TOC entry patterns
+      else if (inTocSection && isOnEarlyPage && (
+        content.includes('section ') || 
+        content.includes('loa ') || 
+        content.includes('letters of agreement') ||
+        content.includes('...') // Dotted lines typical in TOC
+      )) {
+        tocSections.push(section);
+      }
+      // End of TOC - when we hit actual content sections
+      else if (inTocSection && (
+        content.includes('recognition') || 
+        content.includes('r e c o g n i t i o n') ||
+        section.originalPage > 4
+      )) {
+        inTocSection = false;
+        contentSections.push(section);
+      }
+      // Regular content sections
+      else if (!inTocSection) {
+        contentSections.push(section);
+      }
+    });
+
+    // Create condensed TOC entry if we found TOC sections
+    if (tocSections.length > 0) {
+      const firstTocSection = tocSections[0];
+      const lastTocSection = tocSections[tocSections.length - 1];
+      
+      const condensedToc = {
+        id: 'toc_condensed',
+        type: 'heading' as const,
+        content: 'Table Of Contents',
+        originalPage: firstTocSection.originalPage,
+        metadata: {
+          category: 'general' as const,
+          importance: 'low' as const,
+          glossaryTerms: [],
+          affects: ['all_flight_attendants'],
+          keywords: [],
+          containsMonetaryInfo: false,
+          pageRange: {
+            start: firstTocSection.originalPage,
+            end: lastTocSection.originalPage
+          },
+          sectionCount: tocSections.length
+        }
+      };
+      
+      return [condensedToc, ...contentSections];
+    }
+    
+    return sections;
+  };
 
   const filteredSections = useMemo(() => {
     if (!document?.sections) return [];
@@ -146,7 +249,10 @@ export default function DocumentViewer({
       );
     }
     
-    return sections;
+    // Detect and handle table of contents sections
+    const processedSections = processTableOfContents(sections, searchTerm);
+    
+    return processedSections;
   }, [document?.sections, categoryFilter, searchTerm]);
 
   const pageRange = useMemo(() => {

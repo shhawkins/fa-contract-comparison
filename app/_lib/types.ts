@@ -19,6 +19,14 @@ export interface SectionMetadata {
   importance: 'high' | 'medium' | 'low';
   glossaryTerms?: string[];
   affects?: string[];
+  // Additional properties for condensed table of contents
+  pageRange?: {
+    start: number;
+    end: number;
+  };
+  sectionCount?: number;
+  keywords?: string[];
+  containsMonetaryInfo?: boolean;
 }
 
 export interface GlossaryTerm {

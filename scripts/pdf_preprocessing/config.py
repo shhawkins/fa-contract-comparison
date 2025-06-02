@@ -4,8 +4,8 @@ Configuration for PDF preprocessing pipeline
 import os
 
 # Paths
-INPUT_PDF_DIR = "scripts/input_pdfs"
-OUTPUT_JSON_DIR = "public/documents"
+INPUT_PDF_DIR = "../input_pdfs"
+OUTPUT_JSON_DIR = "../../public/documents"
 
 # Document mappings
 DOCUMENT_MAPPINGS = {

@@ -10,9 +10,10 @@ import PdfModal from './_components/document/PdfModal';
 import ComparisonTool from './_components/comparison/ComparisonTool';
 
 function ContractComparisonApp() {
-  const { documentA, loadDocument, isLoading, error, searchTerm, categoryFilter } = useDocumentContext();
+  const { documentA, documentB, loadDocument, isLoading, error, searchTerm, categoryFilter } = useDocumentContext();
   const [pdfTargetPage, setPdfTargetPage] = useState<number>(1);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState<boolean>(false);
+  const [currentPdfFile, setCurrentPdfFile] = useState<string>('/documents/current-contract.pdf');
   const [lastSelection, setLastSelection] = useState<{
     text: string;
     documentId: 'documentA' | 'documentB';
@@ -22,15 +23,17 @@ function ContractComparisonApp() {
   } | null>(null);
 
   useEffect(() => {
-    // Load the current contract on app start
+    // Load both contracts on app start
     loadDocument('contractA');
+    loadDocument('contractB');
   }, [loadDocument]);
 
   const handleTextSelection = (selectedText: string, documentId: string, sectionId?: string) => {
     console.log('Text selected:', { selectedText, documentId, sectionId });
     
-    // Find section metadata for the selection
-    const section = documentA?.sections?.find(s => s.id === sectionId);
+    // Find section metadata for the selection from the appropriate document
+    const document = documentId === 'documentA' ? documentA : documentB;
+    const section = document?.sections?.find(s => s.id === sectionId);
     
     setLastSelection({
       text: selectedText,
@@ -41,9 +44,17 @@ function ContractComparisonApp() {
     });
   };
 
-  const handleNavigateToPdf = (pageNumber: number) => {
-    console.log('Navigating to PDF page:', pageNumber);
+  const handleNavigateToPdf = (pageNumber: number, documentId?: string) => {
+    console.log('Navigating to PDF page:', pageNumber, 'for document:', documentId);
     setPdfTargetPage(pageNumber);
+    
+    // Set the appropriate PDF file based on document
+    if (documentId === 'documentB') {
+      setCurrentPdfFile('/documents/proposed-contract.pdf');
+    } else {
+      setCurrentPdfFile('/documents/current-contract.pdf');
+    }
+    
     setIsPdfModalOpen(true);
   };
 
@@ -58,10 +69,33 @@ function ContractComparisonApp() {
         document={documentA}
         searchTerm={searchTerm}
         categoryFilter={categoryFilter}
-        onSelectText={handleTextSelection}
-        onNavigateToPdf={handleNavigateToPdf}
+        onSelectText={(text, sectionId) => handleTextSelection(text, 'documentA', sectionId)}
+        onNavigateToPdf={(page) => handleNavigateToPdf(page, 'documentA')}
         className="h-full"
       />
+    </div>
+  );
+
+  // Document B content - now loads the actual proposed contract
+  const documentBContent = (
+    <div className="h-full overflow-hidden">
+      {documentB ? (
+        <DocumentViewer
+          document={documentB}
+          searchTerm={searchTerm}
+          categoryFilter={categoryFilter}
+          onSelectText={(text, sectionId) => handleTextSelection(text, 'documentB', sectionId)}
+          onNavigateToPdf={(page) => handleNavigateToPdf(page, 'documentB')}
+          className="h-full"
+        />
+      ) : (
+        <div className="h-full flex items-center justify-center bg-gray-50">
+          <div className="text-center text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading proposed contract...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -69,39 +103,6 @@ function ContractComparisonApp() {
   const comparisonContent = (
     <div className="h-full overflow-auto">
       <ComparisonTool className="h-full" />
-    </div>
-  );
-
-  // Placeholder for proposed contract (Phase 4) - also uses same search
-  const documentBContent = (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-hidden flex items-center justify-center bg-gray-50">
-        <div className="text-center text-gray-500">
-          <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Proposed Contract</h3>
-          <p className="text-gray-600 mb-4">Upload or load a proposed contract to compare</p>
-          <p className="text-sm text-gray-500">Coming in Phase 4: Comparison Tools & Templates</p>
-          <p className="text-xs text-gray-400 mt-2">When loaded, this document will also be searchable using the search bar above</p>
-          {lastSelection && (
-            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 max-w-md mx-auto">
-              <p className="text-xs text-gray-600 mb-1">Last selected text from current contract:</p>
-              <p className="text-sm text-gray-800 line-clamp-3">{lastSelection.text}</p>
-              <div className="flex items-center gap-2 mt-2">
-                {lastSelection.pageNumber && (
-                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                    Page {lastSelection.pageNumber}
-                  </span>
-                )}
-                {lastSelection.category && (
-                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                    {lastSelection.category}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 
@@ -165,7 +166,7 @@ function ContractComparisonApp() {
       <PdfModal
         isOpen={isPdfModalOpen}
         onClose={handleClosePdfModal}
-        file="/documents/current-contract.pdf"
+        file={currentPdfFile}
         targetPage={pdfTargetPage}
       />
     </div>
